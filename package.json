@@ -1,0 +1,24 @@
+{
+  "name": "lockedtoken",
+  "version": "1.0.0",
+  "description": "Token which slowly unlocks the balance",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adamdossa/LockedToken.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/adamdossa/LockedToken/issues"
+  },
+  "homepage": "https://github.com/adamdossa/LockedToken#readme",
+  "dependencies": {
+    "bignumber.js": "^9.0.0",
+    "openzeppelin-solidity": "^2.3.0",
+    "truffle": "^5.0.21"
+  }
+}
