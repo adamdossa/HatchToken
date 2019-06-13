@@ -8,16 +8,26 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 contract LockedToken is ERC20Detailed, ERC20, Ownable {
     using SafeMath for uint256;
 
-    address private _treasury;
-    uint256 private _monthlyUnlocked;
-    uint256 private _unlocked;
-    uint256 private _calcTime;
-    uint256 private _treasuryTransfered;
-    uint256 private _calcPeriod = 30 days;
+    address private _treasury; // address at which treasury (locked) funds are held
+    uint256 private _monthlyUnlocked; // amount which is unlocked each _calcPeriod (30 days)
+    uint256 private _unlocked; // amount which was unlocked as of _calcTime
+    uint256 private _calcTime; // last time that _unlocked was updated with monthly unlocked amounts
+    uint256 private _treasuryTransfered; // total amount transferred out by treasury
+    uint256 private _calcPeriod = 30 days; // period for which _monthlyUnlocked is released
 
     event MonthlyUnlockedChanged(uint256 _oldMonthlyUnlocked, uint256 _newMonthlyUnlocked);
     event TreasuryChanged(address _oldTreasury, address _newTreasury);
 
+    /**
+     * @notice constructor
+     * @param name of token
+     * @param symbol of token
+     * @param decimals of token
+     * @param totalSupply of token
+     * @param treasury of token
+     * @param initialUnlocked of token
+     * @param monthlyUnlocked of token
+     */
     constructor (string memory name, string memory symbol, uint8 decimals, uint256 totalSupply, address treasury, uint256 initialUnlocked, uint256 monthlyUnlocked) public
         ERC20Detailed(name, symbol, decimals)
     {
@@ -28,19 +38,44 @@ contract LockedToken is ERC20Detailed, ERC20, Ownable {
         _calcTime = now;
     }
 
-    function treasury() public view returns (address) {
+    /**
+     * @notice returns the treasury account
+     * @return address treasury account
+     */
+    function treasury() external view returns (address) {
         return _treasury;
     }
 
-    function treasuryBalance() public view returns (uint256) {
+    /**
+     * @notice returns the treasury balance
+     * @return uint256 treasury balance
+     */
+    function treasuryBalance() external view returns (uint256) {
         return balanceOf(_treasury);
     }
 
-    function monthlyUnlocked() public view returns (uint256) {
+    /**
+     * @notice returns the amount unlocked each month
+     * @return uint256 monthly unlocked amount
+     */
+    function monthlyUnlocked() external view returns (uint256) {
         return _monthlyUnlocked;
     }
 
-    function treasuryUnlocked() public view returns (uint256) {
+    /**
+     * @notice returns the total amount transferred out by the treasury
+     * @return uint256 amount transferred out by the treasury
+     */
+    function treasuryTransfered() external view returns (uint256) {
+        return _treasuryTransfered;
+    }
+
+
+    /**
+     * @notice returns the amount which is currently unlocked of the treasury balance
+     * @return uint256 unlocked amount
+     */
+    function treasuryUnlocked() external view returns (uint256) {
         (uint256 unlocked, ) = _calcUnlocked();
         if (unlocked < totalSupply()) {
             return unlocked;
@@ -54,28 +89,35 @@ contract LockedToken is ERC20Detailed, ERC20, Ownable {
         return (_unlocked.add(epochs.mul(_monthlyUnlocked)), _calcTime.add(epochs.mul(_calcPeriod)));
     }
 
-    function treasuryTransfered() external view returns (uint256) {
-        return _treasuryTransfered;
-    }
-
-    function changeTreasury(address newTreasury) external onlyOwner {
-        _transfer(_treasury, newTreasury, balanceOf(_treasury));
-        emit TreasuryChanged(_treasury, newTreasury);
-        _treasury = newTreasury;
-    }
-
-    function changeMonthlyUnlocked(uint256 newMonthlyUnlocked) external onlyOwner {
-        _update();
-        emit MonthlyUnlockedChanged(_monthlyUnlocked, newMonthlyUnlocked);
-        _monthlyUnlocked = newMonthlyUnlocked;
-    }
-
     function _update() internal {
         (uint256 newUnlocked, uint256 newCalcTime) = _calcUnlocked();
         _calcTime = newCalcTime;
         _unlocked = newUnlocked;
     }
 
+    /**
+     * @notice allows the treasury address to be modified in case of compromise
+     * @param newTreasury new treasury address
+     */
+    function changeTreasury(address newTreasury) external onlyOwner {
+        _transfer(_treasury, newTreasury, balanceOf(_treasury));
+        emit TreasuryChanged(_treasury, newTreasury);
+        _treasury = newTreasury;
+    }
+
+    /**
+     * @notice allows the monthly unlocked amount to be modified
+     * @param newMonthlyUnlocked new monthly unlocked amount
+     */
+    function changeMonthlyUnlocked(uint256 newMonthlyUnlocked) external onlyOwner {
+        _update();
+        emit MonthlyUnlockedChanged(_monthlyUnlocked, newMonthlyUnlocked);
+        _monthlyUnlocked = newMonthlyUnlocked;
+    }
+
+    /**
+     * @dev See `IERC20.transfer`.
+     */
     function transfer(address recipient, uint256 amount) public returns (bool) {
         if (msg.sender == _treasury) {
             _update();
@@ -91,6 +133,9 @@ contract LockedToken is ERC20Detailed, ERC20, Ownable {
         return result;
     }
 
+    /**
+     * @dev See `IERC20.transferFrom`.
+     */
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
         if (sender == _treasury) {
             _update();
