@@ -42,7 +42,11 @@ contract LockedToken is ERC20Detailed, ERC20, Ownable {
 
     function treasuryUnlocked() public view returns (uint256) {
         (uint256 unlocked, ) = _calcUnlocked();
-        return unlocked;
+        if (unlocked < totalSupply()) {
+            return unlocked;
+        } else {
+            return totalSupply();
+        }
     }
 
     function _calcUnlocked() internal view returns (uint256, uint256) {
@@ -80,7 +84,11 @@ contract LockedToken is ERC20Detailed, ERC20, Ownable {
             _treasuryTransfered = _treasuryTransfered.add(amount);
             _unlocked = _unlocked.sub(amount);
         }
-        return super.transfer(recipient, amount);
+        bool result = super.transfer(recipient, amount);
+        if (recipient == _treasury) {
+            _unlocked = _unlocked.add(amount);
+        }
+        return result;
     }
 
     function transferFrom(address sender, address recipient, uint256 amount) public returns (bool) {
@@ -91,7 +99,11 @@ contract LockedToken is ERC20Detailed, ERC20, Ownable {
             _treasuryTransfered = _treasuryTransfered.add(amount);
             _unlocked = _unlocked.sub(amount);
         }
-        return super.transferFrom(sender, recipient, amount);
+        bool result = super.transferFrom(sender, recipient, amount);
+        if (recipient == _treasury) {
+            _unlocked = _unlocked.add(amount);
+        }
+        return result;
     }
 
 }

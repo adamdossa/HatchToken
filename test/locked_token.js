@@ -215,4 +215,105 @@ contract('LockedToken', function (accounts) {
 
   });
 
+  it("3. multi-month unlock", async () => {
+
+      // Start again with a new token
+      var lockedToken = await LockedToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(1000000000), accounts[1], BigNumber(200000000), BigNumber(13300000), {from: accounts[0]});
+
+      // Sends some funds
+      await lockedToken.transfer(accounts[2], 100000000, { from: accounts[1] });
+
+      assert.equal((await lockedToken.treasuryUnlocked()).toNumber(), 100000000, "Unlocked funds");
+      assert.equal((await lockedToken.treasuryBalance()).toNumber(), 900000000, "Remaining funds");
+      assert.equal((await lockedToken.balanceOf(accounts[1])).toNumber(), 900000000, "Funds sent");
+      assert.equal((await lockedToken.balanceOf(accounts[2])).toNumber(), 100000000, "Funds received");
+
+      // Go forward two months from creation
+      await increaseTime(60 * 60 * 24 * 60);
+
+      assert.equal((await lockedToken.treasuryUnlocked()).toNumber(), 100000000 + 2*13300000, "Unlocked funds");
+      assert.equal((await lockedToken.treasuryBalance()).toNumber(), 900000000, "Remaining funds");
+      assert.equal((await lockedToken.balanceOf(accounts[1])).toNumber(), 900000000, "Funds sent");
+      assert.equal((await lockedToken.balanceOf(accounts[2])).toNumber(), 100000000, "Funds received");
+
+      // Fail due to insufficient unlocked
+      await catchRevert(lockedToken.transfer(accounts[3], 126600001, { from: accounts[1] }));
+
+      // Sends some more funds
+      await lockedToken.transfer(accounts[3], 126600000, { from: accounts[1] });
+
+      assert.equal((await lockedToken.treasuryUnlocked()).toNumber(), 0, "Unlocked funds");
+      assert.equal((await lockedToken.treasuryBalance()).toNumber(), 773400000, "Remaining funds");
+      assert.equal((await lockedToken.balanceOf(accounts[1])).toNumber(), 773400000, "Funds sent");
+      assert.equal((await lockedToken.balanceOf(accounts[2])).toNumber(), 100000000, "Funds received earlier");
+      assert.equal((await lockedToken.balanceOf(accounts[3])).toNumber(), 126600000, "Funds received");
+
+      // Fail due to insufficient funds
+      await catchRevert(lockedToken.transfer(accounts[3], 1, { from: accounts[1] }));
+
+      // Transfer funds back to treasury
+      await lockedToken.transfer(accounts[1], 100000000, { from: accounts[2] });
+
+      assert.equal((await lockedToken.treasuryUnlocked()).toNumber(), 100000000, "Unlocked funds");
+      assert.equal((await lockedToken.treasuryBalance()).toNumber(), 873400000, "Remaining funds");
+      assert.equal((await lockedToken.balanceOf(accounts[1])).toNumber(), 873400000, "Funds sent");
+      assert.equal((await lockedToken.balanceOf(accounts[2])).toNumber(), 0, "Funds received earlier");
+      assert.equal((await lockedToken.balanceOf(accounts[3])).toNumber(), 126600000, "Funds received");
+
+      // Able to send transferred funds
+      await lockedToken.transfer(accounts[2], 50000000, { from: accounts[1] });
+
+      assert.equal((await lockedToken.treasuryUnlocked()).toNumber(), 50000000, "Unlocked funds");
+      assert.equal((await lockedToken.treasuryBalance()).toNumber(), 823400000, "Remaining funds");
+      assert.equal((await lockedToken.balanceOf(accounts[1])).toNumber(), 823400000, "Funds sent");
+      assert.equal((await lockedToken.balanceOf(accounts[2])).toNumber(), 50000000, "Funds received earlier");
+      assert.equal((await lockedToken.balanceOf(accounts[3])).toNumber(), 126600000, "Funds received");
+
+      // Skip 6 months Forward
+      await increaseTime(60 * 60 * 24 * 30 * 6);
+
+      assert.equal((await lockedToken.treasuryUnlocked()).toNumber(), 129800000, "Unlocked funds");
+      assert.equal((await lockedToken.treasuryBalance()).toNumber(), 823400000, "Remaining funds");
+      assert.equal((await lockedToken.balanceOf(accounts[1])).toNumber(), 823400000, "Funds sent");
+      assert.equal((await lockedToken.balanceOf(accounts[2])).toNumber(), 50000000, "Funds received earlier");
+      assert.equal((await lockedToken.balanceOf(accounts[3])).toNumber(), 126600000, "Funds received");
+
+      // Transfer funds - fail insufficient funds
+      await catchRevert(lockedToken.transfer(accounts[2], 129800001, { from: accounts[1] }));
+
+      // Transfer funds
+      await lockedToken.transfer(accounts[2], 129800000, { from: accounts[1] });
+
+      assert.equal((await lockedToken.treasuryUnlocked()).toNumber(), 0, "Unlocked funds");
+      assert.equal((await lockedToken.treasuryBalance()).toNumber(), 693600000, "Remaining funds");
+      assert.equal((await lockedToken.balanceOf(accounts[1])).toNumber(), 693600000, "Funds sent");
+      assert.equal((await lockedToken.balanceOf(accounts[2])).toNumber(), 179800000, "Funds received earlier");
+      assert.equal((await lockedToken.balanceOf(accounts[3])).toNumber(), 126600000, "Funds received");
+
+      // Go forward until all funds are unlocked
+      await increaseTime(60 * 60 * 24 * 30 * 200);
+      assert.equal((await lockedToken.treasuryUnlocked()).toNumber(), 1000000000, "Unlocked funds");
+      assert.equal((await lockedToken.treasuryBalance()).toNumber(), 693600000, "Remaining funds");
+      assert.equal((await lockedToken.balanceOf(accounts[1])).toNumber(), 693600000, "Funds sent");
+      assert.equal((await lockedToken.balanceOf(accounts[2])).toNumber(), 179800000, "Funds received earlier");
+      assert.equal((await lockedToken.balanceOf(accounts[3])).toNumber(), 126600000, "Funds received");
+
+      // Transfer funds
+      await lockedToken.transfer(accounts[2], 693600000, { from: accounts[1] });
+
+      assert.equal((await lockedToken.treasuryUnlocked()).toNumber(), 1000000000, "Unlocked funds");
+      assert.equal((await lockedToken.treasuryBalance()).toNumber(), 0, "Remaining funds");
+      assert.equal((await lockedToken.balanceOf(accounts[1])).toNumber(), 0, "Funds sent");
+      assert.equal((await lockedToken.balanceOf(accounts[2])).toNumber(), 873400000, "Funds received earlier");
+      assert.equal((await lockedToken.balanceOf(accounts[3])).toNumber(), 126600000, "Funds received");
+
+      // Receive some funds back to treasury
+      await lockedToken.transfer(accounts[1], 100000000, { from: accounts[2] });
+
+      // Transfer them back out
+      await lockedToken.transfer(accounts[2], 100000000, { from: accounts[1] });
+
+
+  });
+
 });
