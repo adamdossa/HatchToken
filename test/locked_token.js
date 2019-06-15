@@ -67,7 +67,7 @@ contract('LockedToken', function (accounts) {
   // =========================================================================
   it("0. initialize contract", async () => {
 
-    var lockedToken = await LockedToken.deployed();
+    var lockedToken = await LockedToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(800000000), accounts[1], BigNumber(200000000), BigNumber(10000000), {from: accounts[0]});
 
     console.log("Token Address: ", lockedToken.address);
 
@@ -87,7 +87,7 @@ contract('LockedToken', function (accounts) {
 
   it("1. transfer initial unlocked amounts", async () => {
 
-    var lockedToken = await LockedToken.deployed();
+    var lockedToken = await LockedToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(800000000), accounts[1], BigNumber(200000000), BigNumber(10000000), {from: accounts[0]});
 
     // Fail due to no balance
     await catchRevert(lockedToken.transfer(accounts[1], 1, { from: accounts[0] }));
