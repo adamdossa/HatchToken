@@ -31,8 +31,8 @@ contract LockedToken is ERC20Detailed, ERC20, Ownable {
     constructor (string memory name, string memory symbol, uint8 decimals, uint256 totalSupply, address treasury, uint256 initialUnlocked, uint256 monthlyUnlocked) public
         ERC20Detailed(name, symbol, decimals)
     {
-        require(initialUnlocked <= totalSupply(), "initialUnlocked too large");
-        require(monthlyUnlocked <= totalSupply(), "monthlyUnlocked too large");
+        require(initialUnlocked <= totalSupply, "initialUnlocked too large");
+        require(monthlyUnlocked <= totalSupply, "monthlyUnlocked too large");
         _mint(treasury, totalSupply);
         _treasury = treasury;
         _monthlyUnlocked = monthlyUnlocked;
