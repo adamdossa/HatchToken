@@ -17,6 +17,7 @@ contract LockedToken is ERC20Detailed, ERC20, Ownable {
 
     event MonthlyUnlockedChanged(uint256 _oldMonthlyUnlocked, uint256 _newMonthlyUnlocked);
     event TreasuryChanged(address _oldTreasury, address _newTreasury);
+    event EmergencyUnlock(uint256 _amount);
 
     /**
      * @notice constructor
@@ -72,6 +73,15 @@ contract LockedToken is ERC20Detailed, ERC20, Ownable {
         return _treasuryTransfered;
     }
 
+    /**
+     * @notice allows the owner to unlock any amount of tokens
+     * @param amount amount of tokens to unlock
+     */
+    function emergencyUnlock(uint256 amount) external onlyOwner {
+        require(amount <= totalSupply(), "amount too large");
+        _unlocked = _unlocked.add(amount);
+        emit EmergencyUnlock(amount);
+    }
 
     /**
      * @notice returns the amount which is currently unlocked of the treasury balance
