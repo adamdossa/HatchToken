@@ -5,7 +5,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
-contract LockedToken is ERC20Detailed, ERC20, Ownable {
+contract HatchToken is ERC20Detailed, ERC20, Ownable {
     using SafeMath for uint256;
 
     address private _treasury; // address at which treasury (locked) funds are held

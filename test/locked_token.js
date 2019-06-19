@@ -1,4 +1,4 @@
-const LockedToken = artifacts.require("./LockedToken.sol");
+const HatchToken = artifacts.require("./HatchToken.sol");
 const BigNumber = require('bignumber.js');
 
 const PREFIX = "VM Exception while processing transaction: ";
@@ -62,12 +62,12 @@ async function increaseTime(duration) {
   await advanceBlock();
 }
 
-contract('LockedToken', function (accounts) {
+contract('HatchToken', function (accounts) {
 
   // =========================================================================
   it("0. initialize contract", async () => {
 
-    var lockedToken = await LockedToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(800000000), accounts[1], BigNumber(200000000), BigNumber(10000000), {from: accounts[0]});
+    var lockedToken = await HatchToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(800000000), accounts[1], BigNumber(200000000), BigNumber(10000000), {from: accounts[0]});
 
     console.log("Token Address: ", lockedToken.address);
 
@@ -87,7 +87,7 @@ contract('LockedToken', function (accounts) {
 
   it("1. transfer initial unlocked amounts", async () => {
 
-    var lockedToken = await LockedToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(800000000), accounts[1], BigNumber(200000000), BigNumber(10000000), {from: accounts[0]});
+    var lockedToken = await HatchToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(800000000), accounts[1], BigNumber(200000000), BigNumber(10000000), {from: accounts[0]});
 
     // Fail due to no balance
     await catchRevert(lockedToken.transfer(accounts[1], 1, { from: accounts[0] }));
@@ -126,7 +126,7 @@ contract('LockedToken', function (accounts) {
   it("2. transfer slowly unlocked amounts", async () => {
 
     // Start again with a new token
-    var lockedToken = await LockedToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(800000000), accounts[1], BigNumber(200000000), BigNumber(10000000), {from: accounts[0]});
+    var lockedToken = await HatchToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(800000000), accounts[1], BigNumber(200000000), BigNumber(10000000), {from: accounts[0]});
 
     // Sends some funds
     await lockedToken.transfer(accounts[2], 100000000, { from: accounts[1] });
@@ -218,7 +218,7 @@ contract('LockedToken', function (accounts) {
   it("3. multi-month unlock", async () => {
 
       // Start again with a new token
-      var lockedToken = await LockedToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(1000000000), accounts[1], BigNumber(200000000), BigNumber(13300000), {from: accounts[0]});
+      var lockedToken = await HatchToken.new("Spectre Token", "SPC", BigNumber(18), BigNumber(1000000000), accounts[1], BigNumber(200000000), BigNumber(13300000), {from: accounts[0]});
 
       // Sends some funds
       await lockedToken.transfer(accounts[2], 100000000, { from: accounts[1] });
