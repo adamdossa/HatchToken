@@ -1,4 +1,4 @@
-# LockedToken
+# HatchToken
 
 Token which slowly unlocks the balance.
 
